@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WORLD MODELS FOR PLACES THAT REMEMBER — ROOM × World Models Hackathon</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #030308;
+    --deep: #07070f;
+    --node: #e8e0ff;
+    --pulse: #7b5ea7;
+    --signal: #c4a882;
+    --wire: #2a1f3d;
+    --hot: #ff6b35;
+    --cool: #4ecdc4;
+    --dim: rgba(232, 224, 255, 0.15);
+    --serif: 'Cormorant Garamond', serif;
+    --display: 'Bebas Neue', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: var(--node);
+    font-family: var(--serif);
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* CANVAS */
+  #cosmos {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* LAYOUT */
+  .layer {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 8vw;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--pulse);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.3s;
+  }
+
+  .hero-title {
+    font-family: var(--display);
+    font-size: clamp(4rem, 14vw, 13rem);
+    line-height: 0.88;
+    letter-spacing: -0.01em;
+    color: var(--node);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.5s;
+  }
+
+  .hero-title span.accent {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--pulse);
+  }
+
+  .hero-title span.hot {
+    color: var(--hot);
+  }
+
+  .hero-sub {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--signal);
+    max-width: 600px;
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.8s;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 3rem;
+    left: 8vw;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--dim);
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.2s;
+  }
+
+  .hero-scroll::before {
+    content: '';
+    display: inline-block;
+    width: 40px;
+    height: 1px;
+    background: var(--dim);
+    vertical-align: middle;
+    margin-right: 1rem;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--wire), transparent);
+    margin: 0 auto;
+  }
+
+  /* SECTIONS */
+  section {
+    padding: 8rem 8vw;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--pulse);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--wire);
+    max-width: 200px;
+  }
+
+  /* THE CONCEPT */
+  .concept {
+    background: var(--deep);
+  }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  @media (max-width: 768px) {
+    .concept-grid { grid-template-columns: 1fr; }
+    .stack-grid { grid-template-columns: 1fr; }
+    .roles-grid { grid-template-columns: 1fr; }
+  }
+
+  .concept-headline {
+    font-family: var(--display);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    line-height: 1;
+    color: var(--node);
+    margin-bottom: 2rem;
+  }
+
+  .concept-body {
+    font-size: clamp(1rem, 1.5vw, 1.25rem);
+    font-weight: 300;
+    line-height: 1.8;
+    color: rgba(232, 224, 255, 0.75);
+  }
+
+  .concept-body p + p {
+    margin-top: 1.5rem;
+  }
+
+  .concept-body em {
+    color: var(--signal);
+    font-style: italic;
+  }
+
+  .concept-body strong {
+    color: var(--node);
+    font-weight: 400;
+  }
+
+  /* DIAGRAM */
+  .diagram {
+    background: rgba(123, 94, 167, 0.05);
+    border: 1px solid var(--wire);
+    border-radius: 2px;
+    padding: 2.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    line-height: 2;
+    color: rgba(232, 224, 255, 0.5);
+  }
+
+  .diagram .node-line {
+    color: var(--cool);
+  }
+
+  .diagram .arrow-line {
+    color: var(--pulse);
+    padding-left: 1.5rem;
+  }
+
+  .diagram .world-line {
+    color: var(--hot);
+    padding-left: 3rem;
+  }
+
+  .diagram .comment-line {
+    color: rgba(232, 224, 255, 0.25);
+    font-style: italic;
+  }
+
+  /* THE TERRITORY */
+  .territory {
+    position: relative;
+  }
+
+  .territory-statement {
+    font-family: var(--display);
+    font-size: clamp(3rem, 7vw, 7rem);
+    line-height: 0.9;
+    margin-bottom: 4rem;
+  }
+
+  .territory-statement .line-1 { color: var(--node); }
+  .territory-statement .line-2 { color: transparent; -webkit-text-stroke: 1px var(--signal); }
+  .territory-statement .line-3 { color: var(--hot); }
+
+  .territory-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+  }
+
+  @media (max-width: 900px) {
+    .territory-cols { grid-template-columns: 1fr; }
+  }
+
+  .territory-col {
+    background: rgba(123, 94, 167, 0.04);
+    border: 1px solid var(--wire);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .territory-col::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .territory-col:nth-child(1)::before { background: var(--pulse); }
+  .territory-col:nth-child(2)::before { background: var(--signal); }
+  .territory-col:nth-child(3)::before { background: var(--hot); }
+
+  .col-number {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--dim);
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+  }
+
+  .col-title {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+    color: var(--node);
+  }
+
+  .col-body {
+    font-size: 0.9rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: rgba(232, 224, 255, 0.6);
+  }
+
+  /* STACK */
+  .stack {
+    background: var(--deep);
+  }
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    margin-top: 1rem;
+  }
+
+  .stack-item {
+    background: rgba(7, 7, 15, 0.8);
+    border: 1px solid var(--wire);
+    padding: 2rem;
+    transition: border-color 0.3s ease, background 0.3s ease;
+    cursor: default;
+  }
+
+  .stack-item:hover {
+    border-color: var(--pulse);
+    background: rgba(123, 94, 167, 0.08);
+  }
+
+  .stack-status {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .stack-status.live { color: var(--cool); }
+  .stack-status.building { color: var(--signal); }
+  .stack-status.integrating { color: var(--hot); }
+  .stack-status.stretch { color: var(--dim); }
+
+  .stack-status::before {
+    content: '◉ ';
+  }
+
+  .stack-name {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+    color: var(--node);
+    margin-bottom: 0.5rem;
+  }
+
+  .stack-desc {
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.6;
+    color: rgba(232, 224, 255, 0.5);
+    font-family: var(--serif);
+  }
+
+  /* PROOF */
+  .proof {
+    position: relative;
+  }
+
+  .proof-quote {
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5;
+    color: var(--signal);
+    border-left: 2px solid var(--pulse);
+    padding-left: 2.5rem;
+    margin-bottom: 3rem;
+    max-width: 800px;
+  }
+
+  .proof-meta {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    margin-top: 1rem;
+  }
+
+  /* ROLES */
+  .roles {
+    background: var(--deep);
+  }
+
+  .roles-intro {
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(232, 224, 255, 0.6);
+    max-width: 700px;
+    line-height: 1.7;
+    margin-bottom: 4rem;
+  }
+
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .role-card {
+    border: 1px solid var(--wire);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .role-card:hover {
+    border-color: var(--pulse);
+    transform: translateY(-4px);
+  }
+
+  .role-icon {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .role-title {
+    font-family: var(--display);
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    color: var(--node);
+    margin-bottom: 1rem;
+  }
+
+  .role-skills {
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--cool);
+    margin-bottom: 1.5rem;
+    line-height: 2;
+  }
+
+  .role-desc {
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: rgba(232, 224, 255, 0.5);
+  }
+
+  /* DEMO */
+  .demo-link {
+    background: rgba(123, 94, 167, 0.08);
+    border: 1px solid var(--pulse);
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--node);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+  }
+
+  .demo-link:hover {
+    background: var(--pulse);
+    color: var(--void);
+  }
+
+  /* CTA */
+  .cta {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 8vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: 'WORLD';
+    position: absolute;
+    right: -5vw;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--display);
+    font-size: clamp(15rem, 35vw, 40rem);
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(123, 94, 167, 0.08);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .cta-headline {
+    font-family: var(--display);
+    font-size: clamp(3rem, 8vw, 8rem);
+    line-height: 0.9;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-headline span { color: var(--hot); }
+
+  .cta-body {
+    font-size: clamp(1rem, 1.8vw, 1.3rem);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(232, 224, 255, 0.6);
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-contact {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+
+  .cta-handle {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--pulse);
+    text-transform: uppercase;
+  }
+
+  .cta-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    border: 1px solid var(--wire);
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* SCROLL REVEALS */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+  .reveal-delay-5 { transition-delay: 0.5s; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 3rem 8vw;
+    border-top: 1px solid var(--wire);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  footer span {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  /* NODE PULSE EFFECT */
+  .node-pulse {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--cool);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="cosmos"></canvas>
+
+<div class="layer">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">ROOM × World Models Hackathon · March 2026</div>
+    <h1 class="hero-title">
+      WORLD<br>
+      MODELS FOR<br>
+      PLACES THAT<br>
+      <span class="hot">REMEMBER</span>
+    </h1>
+    <p class="hero-sub">A spatial knowledge graph where every node is a door. Step through and the world generates around you.</p>
+    <div class="hero-scroll">scroll to enter</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- THE CONCEPT -->
+  <section class="concept">
+    <div class="section-label">01 — The Concept</div>
+    <div class="concept-grid">
+      <div>
+        <h2 class="concept-headline reveal">Not a visualization.<br>A navigation system.</h2>
+        <div class="concept-body reveal reveal-delay-1">
+          <p>Most knowledge graphs show you information. This one <em>takes you there.</em></p>
+          <p>The graph floats in space around you. Each node is a place, a story, a moment in time — anchored to real community knowledge, real historical assets, real coordinates on earth.</p>
+          <p>You reach out. You pinch a node. <strong>The graph dissolves. The world opens.</strong></p>
+          <p>What was data becomes environment. The knowledge graph is the map. The world model is the territory.</p>
+        </div>
+      </div>
+
+      <div class="diagram reveal reveal-delay-2">
+        <div class="comment-line">// the portal interaction</div>
+        <br>
+        <div class="node-line">NODE("History / Babe Ruth / Dunsmuir")</div>
+        <div class="arrow-line">↓ pinch gesture</div>
+        <div class="arrow-line">↓ graph dissolves</div>
+        <div class="arrow-line">↓ world model generates</div>
+        <div class="world-line">ENV → you are standing there</div>
+        <br>
+        <div class="comment-line">// semantic layer persists</div>
+        <div class="node-line">GRAPH → overhead as constellation</div>
+        <div class="arrow-line">↓ pinch again → next node</div>
+        <div class="arrow-line">↓ next world</div>
+        <br>
+        <div class="comment-line">// return anytime</div>
+        <div class="node-line">PALM UP → graph returns</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- THREE LAYERS -->
+  <section class="territory">
+    <div class="section-label">02 — Three Layers of Reality</div>
+    <div class="territory-statement reveal">
+      <div class="line-1">THE GRAPH</div>
+      <div class="line-2">THE WORLD</div>
+      <div class="line-3">THE MEMORY</div>
+    </div>
+    <div class="territory-cols">
+      <div class="territory-col reveal reveal-delay-1">
+        <div class="col-number">LAYER 01</div>
+        <div class="col-title">THE GRAPH</div>
+        <div class="col-body">A force-directed 3D knowledge graph already live in the browser. Nodes are concepts, places, people, moments. Edges are relationships. Three layout modes — centralized, decentralized, distributed. This is your compass inside the experience.</div>
+      </div>
+      <div class="territory-col reveal reveal-delay-2">
+        <div class="col-number">LAYER 02</div>
+        <div class="col-title">THE WORLD</div>
+        <div class="col-body">World Labs Marble API turns community assets — old photographs, spatial scans, oral histories — into navigable 3D environments. Each node in the graph has a world behind it. The world model is the territory the graph describes.</div>
+      </div>
+      <div class="territory-col reveal reveal-delay-3">
+        <div class="col-number">LAYER 03</div>
+        <div class="col-title">THE MEMORY</div>
+        <div class="col-body">Community knowledge as infrastructure. DVV — Dunsmuir Visionary Village — is the first shard. A bioregional community's history, land, and future as navigable space. Real places. Real stories. Real people who lived them.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- THE STACK -->
+  <section class="stack">
+    <div class="section-label">03 — The Stack</div>
+    <div class="stack-grid">
+      <div class="stack-item reveal reveal-delay-1">
+        <div class="stack-status live">Live now</div>
+        <div class="stack-name">Three.js Graph</div>
+        <div class="stack-desc">DVV spatial knowledge graph running on Vercel. Multiple layout modes, full node interaction, world.json data structure. This is the foundation — already working.</div>
+      </div>
+      <div class="stack-item reveal reveal-delay-2">
+        <div class="stack-status building">Building</div>
+        <div class="stack-name">WebXR Layer</div>
+        <div class="stack-desc">WebXR session entry on top of existing Three.js. Hand tracking via WebXR Hand Input API. Pinch gesture for node selection. Browser-native — opens on any XR device via URL, no install.</div>
+      </div>
+      <div class="stack-item reveal reveal-delay-3">
+        <div class="stack-status integrating">Integrating</div>
+        <div class="stack-name">World Labs Marble</div>
+        <div class="stack-desc">Node selection triggers Marble API call. Historical assets feed in. Navigable world generates around the user. The hackathon provides API access. This is the world model layer.</div>
+      </div>
+      <div class="stack-item reveal reveal-delay-4">
+        <div class="stack-status stretch">Stretch goal</div>
+        <div class="stack-name">Societies of Thought</div>
+        <div class="stack-desc">Multiple AI perspectives inhabiting the graph as persistent lenses — each node weighted by consensus and conflict between viewpoints. The graph topology reflects the epistemic state of the community.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- PROOF -->
+  <section class="proof">
+    <div class="section-label">04 — Proof of Work</div>
+    <blockquote class="proof-quote reveal">
+      "The DVV knowledge graph is already live. Three layout modes. Full 3D interaction. Running in your browser right now."
+      <div class="proof-meta"><span class="node-pulse"></span>dvv-knowledge-graph.vercel.app — live prototype</div>
+    </blockquote>
+    <div class="reveal reveal-delay-1">
+      <p style="font-size:0.9rem; font-weight:300; color:rgba(232,224,255,0.5); font-family:var(--serif); line-height:1.7; max-width:600px; margin-bottom:1.5rem;">
+        Solo winner, Places category — RP1 Open Metaverse Hackathon, March 2026. The ROOM spatial memory layer has been in development across multiple hackathons and collaborations. This is the next iteration.
+      </p>
+      <a href="https://dvv-knowledge-graph.vercel.app" target="_blank" class="demo-link">◉ Open live prototype →</a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- WHO WE NEED -->
+  <section class="roles">
+    <div class="section-label">05 — Who We Need</div>
+    <p class="roles-intro reveal">This is a two-person build. The foundation exists. What's needed is someone who moves fast in the spatial web stack and wants to build something genuinely new.</p>
+    <div class="roles-grid">
+      <div class="role-card reveal reveal-delay-1">
+        <span class="role-icon">◈</span>
+        <div class="role-title">WebXR Engineer</div>
+        <ul class="role-skills">
+          <li>Three.js / WebGL</li>
+          <li>WebXR Device API</li>
+          <li>Hand tracking / gesture</li>
+          <li>XR session management</li>
+        </ul>
+        <div class="role-desc">The critical path. Adding WebXR entry and hand pinch interaction to an existing Three.js graph. If you've shipped WebXR before, this is a weekend of focused work.</div>
+      </div>
+      <div class="role-card reveal reveal-delay-2">
+        <span class="role-icon">◇</span>
+        <div class="role-title">World Model / API</div>
+        <ul class="role-skills">
+          <li>World Labs Marble API</li>
+          <li>3D scene generation</li>
+          <li>Asset pipeline</li>
+          <li>Spatial transitions</li>
+        </ul>
+        <div class="role-desc">The novel layer. Connecting graph nodes to Marble API calls, handling world generation responses, building the portal transition between graph and environment.</div>
+      </div>
+      <div class="role-card reveal reveal-delay-3">
+        <span class="role-icon">◉</span>
+        <div class="role-title">Shader / Visual</div>
+        <ul class="role-skills">
+          <li>GLSL shaders</li>
+          <li>Three.js materials</li>
+          <li>Particle systems</li>
+          <li>Spatial UI</li>
+        </ul>
+        <div class="role-desc">The feeling of it. The graph should pulse with meaning — contested nodes oscillate, consensus nodes stabilize, portal transitions feel like entering a memory. Visual language matters here.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-headline reveal">
+      FIND ME<br><span>TONIGHT</span>
+    </div>
+    <p class="cta-body reveal reveal-delay-1">
+      If the idea of turning community memory into navigable space resonates — let's build it together.
+    </p>
+    <div class="cta-contact reveal reveal-delay-2">
+      <div class="cta-handle">innercartography</div>
+      <div class="cta-tag">Track: Best WebSpatial · PICO</div>
+      <div class="cta-tag">World Models Hackathon · March 2026</div>
+    </div>
+  </section>
+
+  <footer>
+    <span>ROOM — Semantic Memory Layer for the Spatial Internet</span>
+    <a href="https://github.com/innercartography" target="_blank" style="color:var(--pulse);font-family:var(--mono);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;">github.com/innercartography</a>
+    <a href="https://dvv-knowledge-graph.vercel.app" target="_blank" style="color:var(--cool);font-family:var(--mono);font-size:0.55rem;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;"><span class="node-pulse"></span>dvv-knowledge-graph.vercel.app</a>
+  </footer>
+
+</div>
+
+<script>
+// PARTICLE COSMOS
+const canvas = document.getElementById('cosmos');
+const ctx = canvas.getContext('2d');
+
+let W, H, nodes = [], edges = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Node class
+class Node {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.r = Math.random() * 1.5 + 0.3;
+    this.alpha = Math.random() * 0.5 + 0.1;
+    this.pulse = Math.random() * Math.PI * 2;
+    this.pulseSpeed = Math.random() * 0.02 + 0.005;
+    this.color = Math.random() > 0.7 ? '#7b5ea7' : Math.random() > 0.5 ? '#4ecdc4' : '#e8e0ff';
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.pulse += this.pulseSpeed;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    const a = this.alpha * (0.6 + 0.4 * Math.sin(this.pulse));
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color + Math.floor(a * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+  }
+}
+
+// Init nodes
+const COUNT = Math.min(120, Math.floor(W * H / 12000));
+for (let i = 0; i < COUNT; i++) nodes.push(new Node());
+
+// Mouse parallax
+let mx = W / 2, my = H / 2;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+function drawEdges() {
+  const maxDist = 150;
+  ctx.lineWidth = 0.3;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < maxDist) {
+        const a = (1 - dist / maxDist) * 0.15;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(123, 94, 167, ${a})`;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, W, H);
+  drawEdges();
+  nodes.forEach(n => { n.update(); n.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// SCROLL REVEAL
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
